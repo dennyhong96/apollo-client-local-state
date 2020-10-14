@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { useQuery } from "@apollo/client";
+import { useLazyQuery, useQuery } from "@apollo/client";
 
-import { TODOS } from "../lib/apollo/queries/todos";
+import { TODOS, TODO } from "../lib/apollo/queries/todos";
 import {
   createTodo,
   updateTodo,
@@ -9,7 +9,8 @@ import {
 } from "../lib/apollo/mutations/todos";
 
 export default function Home() {
-  const { data, error, loading } = useQuery(TODOS);
+  const { data: todosData } = useQuery(TODOS);
+  const [getTodo, { data: todoData, error, loading }] = useLazyQuery(TODO);
   const [text, setText] = useState("");
   const [editTodo, setEditTodo] = useState(null);
   const [editTodoText, setEditTodoText] = useState("");
@@ -29,12 +30,16 @@ export default function Home() {
     return <div>{error.message}</div>;
   }
 
+  console.log(todoData);
+
   return (
     <div>
       {/* List items */}
-      {data.todos.map((todo) => (
+      {todosData.todos.map((todo) => (
         <div key={todo.id}>
-          <h3>{todo.text}</h3>
+          <h3 onClick={() => getTodo({ variables: { id: todo.id } })}>
+            {todo.text}
+          </h3>
           <button
             onClick={() => {
               setEditTodo(todo);
@@ -86,6 +91,8 @@ export default function Home() {
         />
         <button type="submit">Add</button>
       </form>
+
+      {todoData && <h1>{todoData.todo.text}</h1>}
     </div>
   );
 }
